@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Library Management</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="container mt-5">
+    <!-- Header section with conditional title and admin requests button -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            {% if user.is_superuser %}
+                <h1 class="mb-0">Welcome Admin</h1>
+            {% else %}
+                <h1 class="mb-0">Available Books</h1>
+            {% endif %}
+        </div>
+        <div>
+            {% if user.is_superuser %}
+                <a href="{% url 'manage_requests' %}" class="btn btn-info me-2">Requests</a>
+            {% endif %}
+            <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
+        </div>
+    </div>
+
+    <!-- Admin-only: Add Book Button -->
+    {% if user.is_superuser %}
+        <a href="{% url 'add_book' %}" class="btn btn-success mb-3">Add New Book</a>
+    {% endif %}
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Quantity</th>
+                <th>Cover</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for book in books %}
+            <tr>
+                <td>{{ book.title }}</td>
+                <td>{{ book.author }}</td>
+                <td>{{ book.quantity }}</td>
+                <td>
+                    {% if book.cover_url %}
+                        <img src="{{ book.cover_url }}" alt="Cover" style="width:60px; height:auto;">
+                        {% if user.is_superuser %}
+                        <a href="{% url 'upload_book_image' book.id %}" class="btn btn-warning btn-sm ms-2">
+                            Edit Cover
+                        </a>
+                        {% endif %}
+                    {% else %}
+                        No Cover
+                        {% if user.is_superuser %}
+                        <a href="{% url 'upload_book_image' book.id %}" class="btn btn-warning btn-sm ms-2">
+                            Upload Cover
+                        </a>
+                        {% endif %}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if user.is_superuser %}
+                        {% if book.quantity > 0 %}
+                            <a href="{% url 'issue_book' book.id %}" class="btn btn-primary">Issue</a>
+                        {% else %}
+                            <span>Out of stock</span>
+                        {% endif %}
+                    {% else %}
+                        {% if book.quantity > 0 %}
+                            <a href="{% url 'request_book' book.id %}" class="btn btn-primary">Request</a>
+                        {% else %}
+                            <span>Out of stock</span>
+                        {% endif %}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{% url 'user_issues' %}" class="btn btn-secondary">My Issues</a>
+</body>
+</html>
