@@ -15,7 +15,10 @@ from datetime import date
 from django.contrib.auth import login, authenticate, logout
 from .models import Book, BookIssue, BookRequest
 import requests
+import time
+from django.utils.dateparse import parse_datetime
 import os, boto3
+from django.conf import settings
 
 # Custom test: Only allow access if user is superuser and username is "admin"
 
@@ -61,9 +64,6 @@ def custom_login(request):
 def book_list(request):
     books = Book.objects.all()
     return render(request, 'book_list.html', {'books': books})
-
-
-
 
 
 @login_required
@@ -241,41 +241,101 @@ def issue_book(request, book_id):
     if request.method == 'POST':
         selected_user_id = request.POST.get('user_id')
         selected_user = get_object_or_404(User, id=selected_user_id)
-
+        
         if book.quantity > 0:
-            BookIssue.objects.create(book=book, user=selected_user)
+            # Get current timestamp from the external time API.
+            # Use the current Unix timestamp
+            current_ts = int(time.time())
+            time_api_url = f"https://75q6ml42lj.execute-api.us-east-1.amazonaws.com/scp_api/timeapi/?timestamp={current_ts}&tzone=Europe/Dublin"
+            try:
+                time_response = requests.get(time_api_url)
+                time_response.raise_for_status()
+                time_data = time_response.json()
+
+                # Debug: see exactly what the API returned
+                print("DEBUG: Raw time_data from API:", time_data)
+
+
+                # Assume the API returns JSON with a "datetime" key in ISO 8601 format.
+                external_issue_time = parse_datetime(time_data.get("datetime"))
+            except Exception as e:
+                print("Error retrieving time from API:", e)
+                external_issue_time = None
+
+            # Create the BookIssue record using the external timestamp if available.
+            if external_issue_time:
+                BookIssue.objects.create(book=book, user=selected_user, issue_date=external_issue_time)
+            else:
+                # Fall back to server's current time if API fails.
+                BookIssue.objects.create(book=book, user=selected_user)
+                
+            # Update the book quantity.
             book.quantity -= 1
             book.save()
 
-            # Use GET request with query parameters
-            api_url = "https://uvbvgn4d1l.execute-api.us-east-1.amazonaws.com/x23304987api"
+            # Update the external key–value store API.
+            kvs_api_url = "https://uvbvgn4d1l.execute-api.us-east-1.amazonaws.com/x23304987api"
             params = {
                 "key": f"book:{book.id}",
                 "value": selected_user.username
             }
             try:
-                response = requests.get(api_url, params=params)
-
-                # Debug output:
-                print("API Request URL:", response.url)
-                print("Status Code:", response.status_code)
-                print("Response Headers:", response.headers)
-                print("Response Content:", response.text)
-
-
-                response.raise_for_status()
+                kvs_response = requests.get(kvs_api_url, params=params)
+                kvs_response.raise_for_status()
+                print("KVS API Request URL:", kvs_response.url)
+                print("KVS API Status Code:", kvs_response.status_code)
+                print("KVS API Response:", kvs_response.text)
             except requests.RequestException as e:
-                # Log or handle the error as needed.
                 print("Error updating external API:", e)
 
         return redirect('book_list')
     
     else:
         all_users = User.objects.all()
-        return render(request, 'issue_form.html', {
-            'book': book,
-            'all_users': all_users,
-        })
+        return render(request, 'issue_form.html', {'book': book, 'all_users': all_users})
+    
+
+# def issue_book(request, book_id):
+#     book = get_object_or_404(Book, id=book_id)
+    
+#     if request.method == 'POST':
+#         selected_user_id = request.POST.get('user_id')
+#         selected_user = get_object_or_404(User, id=selected_user_id)
+
+#         if book.quantity > 0:
+#             BookIssue.objects.create(book=book, user=selected_user)
+#             book.quantity -= 1
+#             book.save()
+
+#             # Use GET request with query parameters
+#             api_url = "https://uvbvgn4d1l.execute-api.us-east-1.amazonaws.com/x23304987api"
+#             params = {
+#                 "key": f"book:{book.id}",
+#                 "value": selected_user.username
+#             }
+#             try:
+#                 response = requests.get(api_url, params=params)
+
+#                 # Debug output:
+#                 print("API Request URL:", response.url)
+#                 print("Status Code:", response.status_code)
+#                 print("Response Headers:", response.headers)
+#                 print("Response Content:", response.text)
+
+
+#                 response.raise_for_status()
+#             except requests.RequestException as e:
+#                 # Log or handle the error as needed.
+#                 print("Error updating external API:", e)
+
+#         return redirect('book_list')
+    
+#     else:
+#         all_users = User.objects.all()
+#         return render(request, 'issue_form.html', {
+#             'book': book,
+#             'all_users': all_users,
+#         })
 
 @user_passes_test(is_admin, login_url='login')
 def upload_book_image(request, book_id):
@@ -295,6 +355,8 @@ def upload_book_image(request, book_id):
             endpoint = f"{base_url}/image/upload?virtualFolderName=book_covers"
             files = {'file': (uploaded_file.name, uploaded_file.read(), uploaded_file.content_type)}
             response = requests.post(endpoint, files=files)
+
+            
             response.raise_for_status()
             sas_url = response.text.strip()
             if not sas_url:

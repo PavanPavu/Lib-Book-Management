@@ -37,8 +37,8 @@ class BookIssue(models.Model):
 
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    issue_date = models.DateField(auto_now_add=True)
-    return_date = models.DateField(null=True, blank=True)
+    issue_date = models.DateTimeField(auto_now_add=True)
+    return_date = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=8, choices=STATUS_CHOICES, default='issued')
 
     def __str__(self):

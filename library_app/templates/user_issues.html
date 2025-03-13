@@ -27,7 +27,7 @@
                         No Cover
                     {% endif %}
                 </td>
-                <td>{{ issue.issue_date }}</td>
+                <td>{{ issue.issue_date|date:"M d, Y H:i" }}</td>
                 <td>{{ issue.status }}</td>
                 <td>
                     <a href="{% url 'return_book' issue.id %}" class="btn btn-danger">Return</a>
