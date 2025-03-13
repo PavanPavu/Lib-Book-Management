@@ -44,6 +44,7 @@ urlpatterns = [
     path('manage_requests/', views.manage_requests, name='manage_requests'),
     path('approve_request/<int:request_id>/', views.approve_request, name='approve_request'),
     path('reject_request/<int:request_id>/', views.reject_request, name='reject_request'),
+    path('delete_book/<int:book_id>/', views.delete_book, name='delete_book'),
 ]
 
 
