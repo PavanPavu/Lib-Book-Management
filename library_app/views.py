@@ -1,12 +1,3 @@
-# from django.shortcuts import render, redirect, get_object_or_404
-# from django.contrib.auth.decorators import login_required, user_passes_test
-# from django.contrib.auth.models import User
-# from datetime import date
-# from django.contrib.auth import login, authenticate, logout
-# from django.contrib.admin.views.decorators import staff_member_required
-# from .models import Book, BookIssue, BookRequest
-# import requests
-
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -102,20 +93,6 @@ def delete_book(request, book_id):
     
     # For GET requests, render a confirmation page.
     return render(request, 'delete_book_confirm.html', {'book': book})
-
-
-# @login_required
-# def return_book(request, issue_id):
-#     issue_record = get_object_or_404(BookIssue, id=issue_id)
-#     if issue_record.user != request.user:
-#         return redirect('user_issues')
-#     issue_record.status = 'returned'
-#     issue_record.return_date = date.today()
-#     issue_record.save()
-#     # Increase available quantity of the book
-#     issue_record.book.quantity += 1
-#     issue_record.book.save()
-#     return redirect('user_issues')
 
 
 API_URL = "https://uvbvgn4d1l.execute-api.us-east-1.amazonaws.com/x23304987api"
@@ -214,26 +191,6 @@ def add_book(request):
     return render(request, 'add_book.html')
 
 
-
-# @user_passes_test(is_admin, login_url='login')
-# def issue_book(request, book_id):
-#     book = get_object_or_404(Book, id=book_id)
-#     if request.method == 'POST':
-#         selected_user_id = request.POST.get('user_id')
-#         selected_user = get_object_or_404(User, id=selected_user_id)
-#         if book.quantity > 0:
-#             BookIssue.objects.create(book=book, user=selected_user)
-#             book.quantity -= 1
-#             book.save()
-#         return redirect('book_list')
-#     else:
-#         # Display a form for admin to select a user to issue the book
-#         all_users = User.objects.all()
-#         return render(request, 'issue_form.html', {
-#             'book': book,
-#             'all_users': all_users,
-#         })
-
 @user_passes_test(is_admin, login_url='login')
 def issue_book(request, book_id):
     book = get_object_or_404(Book, id=book_id)
@@ -294,48 +251,6 @@ def issue_book(request, book_id):
         all_users = User.objects.all()
         return render(request, 'issue_form.html', {'book': book, 'all_users': all_users})
     
-
-# def issue_book(request, book_id):
-#     book = get_object_or_404(Book, id=book_id)
-    
-#     if request.method == 'POST':
-#         selected_user_id = request.POST.get('user_id')
-#         selected_user = get_object_or_404(User, id=selected_user_id)
-
-#         if book.quantity > 0:
-#             BookIssue.objects.create(book=book, user=selected_user)
-#             book.quantity -= 1
-#             book.save()
-
-#             # Use GET request with query parameters
-#             api_url = "https://uvbvgn4d1l.execute-api.us-east-1.amazonaws.com/x23304987api"
-#             params = {
-#                 "key": f"book:{book.id}",
-#                 "value": selected_user.username
-#             }
-#             try:
-#                 response = requests.get(api_url, params=params)
-
-#                 # Debug output:
-#                 print("API Request URL:", response.url)
-#                 print("Status Code:", response.status_code)
-#                 print("Response Headers:", response.headers)
-#                 print("Response Content:", response.text)
-
-
-#                 response.raise_for_status()
-#             except requests.RequestException as e:
-#                 # Log or handle the error as needed.
-#                 print("Error updating external API:", e)
-
-#         return redirect('book_list')
-    
-#     else:
-#         all_users = User.objects.all()
-#         return render(request, 'issue_form.html', {
-#             'book': book,
-#             'all_users': all_users,
-#         })
 
 @user_passes_test(is_admin, login_url='login')
 def upload_book_image(request, book_id):
