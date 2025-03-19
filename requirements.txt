@@ -1,6 +1,6 @@
 asgiref
 boto3
-botocore
+botocore<1.36.0
 certifi
 charset-normalizer
 Django
