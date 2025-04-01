@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-e$lf_vrvla6iqkwe2ns_(ef1k9&(a@b7elq$b*_ke8-34tl&ii
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['cmlenv3.eba-khpp4sjh.us-east-1.elasticbeanstalk.com']
+ALLOWED_HOSTS = ["x23304987.eba-pfzv34c2.us-east-1.elasticbeanstalk.com"]
 
 
 # Application definition
@@ -48,6 +48,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'library_management.urls'
@@ -117,7 +118,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
+import os
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static') 
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

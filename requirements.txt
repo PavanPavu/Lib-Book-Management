@@ -1,11 +1,12 @@
 asgiref
 boto3
-botocore<1.36.0
+botocore
 certifi
 charset-normalizer
 Django
 idna
 jmespath
+psycopg2-binary
 python-dateutil
 requests
 s3transfer
@@ -13,3 +14,4 @@ six
 sqlparse
 typing_extensions
 urllib3
+whitenoise
