@@ -51,7 +51,7 @@ def custom_login(request):
             return render(request, 'login.html', {'error': 'Invalid username or password.'})
     return render(request, 'login.html')
 
-
+@login_required(login_url='login')
 def book_list(request):
     books = Book.objects.all()
     return render(request, 'book_list.html', {'books': books})
